@@ -1,0 +1,5 @@
+# Store text files with LF line endings in the repository and the working copy,
+# so Git does not warn about LF/CRLF conversion on Windows.
+* text=auto eol=lf
+
+*.png binary

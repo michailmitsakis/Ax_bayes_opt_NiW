@@ -1,3 +1,15 @@
-/.venv
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+.pytest_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Local scripts not part of the package
 /dragonfly_final.py
 /Δη_vs_Cycle_incl_slope_and_mean.py
