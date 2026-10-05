@@ -1,6 +1,7 @@
 # Ni-W electrodeposition: multi-objective Bayesian optimization with Ax
 
 A human-in-the-loop workflow that proposes which Ni-W electrodeposition recipes to try next, to find cathodes for the hydrogen evolution reaction (HER) that are both active and stable. Each round, [Ax](https://ax.dev) proposes a batch of three recipes; they are run in the lab, the results go into a CSV, and the loop repeats.
+
 This is a personal project that continued my MSc thesis at DTU Energy (2023) on Bayesian-optimized electrodeposition of Ni-W catalysts for hydrogen evolution.
 
 **About the data.** `data/experiments.csv` holds 10 lab measurements (the initial design) and two batches that Ax suggested afterwards. Those six were completed with illustrative values, not measurements, to demonstrate the loop, and the `source` column marks them. Everything under [Results so far](#results-so-far) uses the 10 lab measurements only.
@@ -121,7 +122,7 @@ docs/notes.md                      method notes: thresholds, noise, batching, re
 
 - No Ax-suggested recipe was measured in practice; the six rows after the initial design hold illustrative values.
 - Measurement noise is inferred by the model rather than defined from experiments. Replicates could be passed to Ax as `(mean, sem)`.
-- The slope model has shown essentially no predictive power yet (R² = 0.08), so it's highly likely (as I also noted in my Thesis conslusion) that a different concept be used for the specific 'stability' metric e.g., the slope of the overpotential only during the **last few cycles** of the applied CV.  
+- The slope model has shown essentially no predictive power yet (R² = 0.08). A different stability metric is likely needed, e.g. the slope of the overpotential over only the last few cycles of the CV (as noted in my thesis Conclusion section).
 - The figures rely on the data tables behind Ax's analyses, which Ax does not guarantee to keep stable between minor versions; `ax-platform` is therefore pinned to 1.3.x.
 - The BayBE comparison treats all parameters as continuous and rounds its recommendations to the lab grid. That is faster than BayBE's hybrid mode with a discrete pH, but not identical to it.
 
