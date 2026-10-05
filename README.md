@@ -1,12 +1,13 @@
 # Ni-W electrodeposition: multi-objective Bayesian optimization with Ax
 
 A human-in-the-loop workflow that proposes which Ni-W electrodeposition recipes to try next, to find cathodes for the hydrogen evolution reaction (HER) that are both active and stable. Each round, [Ax](https://ax.dev) proposes a batch of three recipes; they are run in the lab, the results go into a CSV, and the loop repeats.
-
-This is a personal project that continued my MSc thesis at DTU Energy (2023) on Bayesian-optimized electrodeposition of Ni-W catalysts for hydrogen evolution. 
+This is a personal project that continued my MSc thesis at DTU Energy (2023) on Bayesian-optimized electrodeposition of Ni-W catalysts for hydrogen evolution.
 
 **About the data.** `data/experiments.csv` holds 10 lab measurements (the initial design) and two batches that Ax suggested afterwards. Those six were completed with illustrative values, not measurements, to demonstrate the loop, and the `source` column marks them. Everything under [Results so far](#results-so-far) uses the 10 lab measurements only.
 
-![The 10 lab measurements; trials 4 and 7 form the observed Pareto front](docs/img/observed_front.png)
+![The 10 lab measurements with the measured and model-predicted Pareto fronts](docs/img/pareto_front.png)
+
+*The 10 lab measurements (blue), the two that form the measured Pareto front (circled), and the Pareto front the model predicts from them (purple, with 95% intervals on both objectives).*
 
 ## The problem
 
@@ -30,23 +31,23 @@ Temperature is held at 25 °C.
 
 ## How it works
 
-```mermaid
-flowchart LR
-    csv["data/experiments.csv<br/>every experiment so far"] --> ax["Ax: one Gaussian process<br/>per objective"]
-    ax --> batch["qLogNEHVI proposes<br/>the next 3 recipes"]
-    batch --> lab["Lab: deposit and<br/>test the films"]
-    lab -- "measured values" --> csv
-```
+![The optimization loop: experiments table, surrogate model, next batch, lab, back to the table](docs/img/workflow.png)
 
 1. The notebook rebuilds the Ax experiment from the CSV every session, so the readable table is the record of the campaign rather than an Ax snapshot file, whose format changes between Ax versions.
 2. Ax fits one Gaussian process per objective and picks the batch with qLogNEHVI (noisy expected hypervolume improvement, log-space version), which favours recipes likely to extend the Pareto front beyond the thresholds.
 3. The batch is appended to the CSV with empty objective cells. Until they are filled in, Ax treats those recipes as pending and does not propose them again.
 
+Progress is tracked by the hypervolume: the area that the measured Pareto front dominates, relative to the thresholds. It rises only when a new experiment extends the front.
+
+![Hypervolume after each trial, with the illustrative trials shaded](docs/img/hypervolume.png)
+
+*The whole table, to show what a few rounds look like. The first 10 trials are lab measurements; trials 10–15 (shaded, dashed) are recipes Ax actually suggested, with illustrative values.*
+
 ## Results so far
 
 The evidence is 10 lab measurements in a four-dimensional search space, so the model's conclusions are tentative. None of the Ax-suggested recipes has been measured yet, so there is no evidence yet that the optimization improves on the hand-picked initial design.
 
-**Measured Pareto front.** Two of the 10 recipes are non-dominated (figure above): trial 4 has the best overpotential (−286 mV; 0.10 M tungstate, 50 mA/cm², 600 s, pH 7.5) and trial 7 the best slope (+0.0017; 30 mA/cm², pH 8.5, otherwise the same). Eight of the 10 meet both thresholds.
+**Measured and predicted Pareto front** (first figure). Two of the 10 recipes are non-dominated: trial 4 has the best overpotential (−286 mV; 0.10 M tungstate, 50 mA/cm², 600 s, pH 7.5) and trial 7 the best slope (+0.0017; 30 mA/cm², pH 8.5, otherwise the same). Eight of the 10 meet both thresholds. The model predicts a trade-off between them that runs mainly along current density: around 30 mA/cm² for the best slope (about −295 mV, +0.0016) and around 48 mA/cm² for the best overpotential (about −282 mV, +0.0002), with deposition times of 540–600 s and pH 8–9.5 throughout. The slope side of that curve is the less certain one, because the slope model predicts poorly (next paragraph).
 
 **How well the model predicts.** In leave-one-out cross-validation, each recipe is predicted by a model fitted to the other nine, shown with its 95% predictive interval. The overpotential model reaches R² = 0.64. The slope model reaches R² = 0.08: it has found no usable pattern yet, so the next suggestions are driven mainly by the overpotential.
 
@@ -54,14 +55,11 @@ The evidence is 10 lab measurements in a four-dimensional search space, so the m
 
 **What the overpotential model has learned.** Current density accounts for most of the predicted variation, followed by deposition time and pH; tungstate concentration has almost no effect within its range. The predicted best region is around 40–55 mA/cm² and pH 8–9.5, with longer deposition times better up to the 600 s limit.
 
-<p>
-  <img src="docs/img/sensitivity.png" alt="Sobol indices of the four parameters for overpotential" width="49%">
-  <img src="docs/img/contour.png" alt="Predicted overpotential over current density and pH" width="49%">
-</p>
+![Parameter importance and predicted overpotential over current density and pH](docs/img/model_insights.png)
 
-![Predicted overpotential along each parameter](docs/img/slices.png)
+![Predicted overpotential along each parameter, with 95% bands](docs/img/slices.png)
 
-The contour and slices hold the other parameters at trial 4. Ax computes all of these numbers; `src/niw_bo/plotting.py` draws them with matplotlib, and `python scripts/make_figures.py` regenerates them from the lab rows of the CSV.
+The contour and slices hold the other parameters at trial 4. Ax computes all of these numbers; `src/niw_bo/plotting.py` draws them with matplotlib, and `python scripts/make_figures.py` regenerates every figure from the CSV.
 
 **Next batch.** From the 10 lab measurements, Ax proposes:
 
@@ -111,7 +109,8 @@ niw_optimization.ipynb             one optimization round (start here)
 data/experiments.csv               every experiment: batch, parameters, objectives, source
 src/niw_bo/config.py               search space, objectives, thresholds, batch size, labels
 src/niw_bo/campaign.py             CSV <-> Ax Client: load, attach experiments, suggest a batch
-src/niw_bo/plotting.py             matplotlib figures drawn from Ax's analyses and predictions
+src/niw_bo/plotting.py             matplotlib figures drawn from Ax's analyses and predictions,
+                                   including the model-predicted Pareto front
 scripts/make_figures.py            regenerates the figures in docs/img
 extras/baybe_comparison.ipynb      the same problem in BayBE 0.15, compared with Ax
 tests/                             pytest suite
@@ -120,9 +119,9 @@ docs/notes.md                      method notes: thresholds, noise, batching, re
 
 ## Limitations
 
-- No Ax-suggested recipe has been measured yet; the six rows after the initial design hold illustrative values.
-- Each recipe was measured once, so measurement noise is inferred by the model rather than measured. Replicates could be passed to Ax as `(mean, sem)`.
-- The slope model has no predictive power yet (R² = 0.08).
+- No Ax-suggested recipe was measured in practice; the six rows after the initial design hold illustrative values.
+- Measurement noise is inferred by the model rather than defined from experiments. Replicates could be passed to Ax as `(mean, sem)`.
+- The slope model has shown essentially no predictive power yet (R² = 0.08), so it's highly likely (as I also noted in my Thesis conslusion) that a different concept be used for the specific 'stability' metric e.g., the slope of the overpotential only during the **last few cycles** of the applied CV.  
 - The figures rely on the data tables behind Ax's analyses, which Ax does not guarantee to keep stable between minor versions; `ax-platform` is therefore pinned to 1.3.x.
 - The BayBE comparison treats all parameters as continuous and rounds its recommendations to the lab grid. That is faster than BayBE's hybrid mode with a discrete pH, but not identical to it.
 

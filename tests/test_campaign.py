@@ -126,7 +126,7 @@ def test_figures_draw():
     client = build_client(seed=0)
     attach_experiments(client, df)
 
-    plot_observed_front(df, symlog_y=1e-3)
+    plot_observed_front(df, client=client, symlog_y=1e-3)
     plot_hypervolume(client, df)
     plot_sensitivity(client, "overpotential")
     for metric in ("overpotential", "overpotential_slope"):
@@ -134,3 +134,19 @@ def test_figures_draw():
     plot_contour(client, df, "overpotential", "current_density", "pH")
     plot_slices(client, df, "overpotential")
     plt.close("all")
+
+
+@pytest.mark.slow
+def test_predicted_front_is_non_dominated_and_in_bounds():
+    from niw_bo import predicted_front
+
+    df = load_experiments(DATA, include_illustrative=False)
+    client = build_client(seed=0)
+    attach_experiments(client, df)
+
+    front = predicted_front(client, n=512)
+
+    assert len(front) >= 1
+    assert pareto_mask(front[["overpotential", "overpotential_slope"]].to_numpy()).all()
+    assert_in_search_space(front)
+    assert (front[["overpotential_sem", "overpotential_slope_sem"]] > 0).all().all()

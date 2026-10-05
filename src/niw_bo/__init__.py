@@ -14,6 +14,7 @@ from niw_bo.plotting import (
     plot_observed_front,
     plot_sensitivity,
     plot_slices,
+    predicted_front,
 )
 
 __all__ = [
@@ -27,5 +28,6 @@ __all__ = [
     "plot_observed_front",
     "plot_sensitivity",
     "plot_slices",
+    "predicted_front",
     "suggest_next_batch",
 ]
