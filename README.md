@@ -2,7 +2,7 @@
 
 A human-in-the-loop workflow that proposes which Ni-W electrodeposition recipes to try next, to find cathodes for the hydrogen evolution reaction (HER) that are both active and stable. Each round, [Ax](https://ax.dev) proposes a batch of three recipes; they are run in the lab, the results go into a CSV, and the loop repeats.
 
-This is a personal project that continues my MSc thesis at DTU Energy (2023) on Bayesian-optimized electrodeposition of Ni-W catalysts for hydrogen evolution. After the thesis ended, I rebuilt its optimization workflow on my own with Ax and have kept developing it here; it is not part of the thesis itself.
+This is a personal project that continued my MSc thesis at DTU Energy (2023) on Bayesian-optimized electrodeposition of Ni-W catalysts for hydrogen evolution. 
 
 **About the data.** `data/experiments.csv` holds 10 lab measurements (the initial design) and two batches that Ax suggested afterwards. Those six were completed with illustrative values, not measurements, to demonstrate the loop, and the `source` column marks them. Everything under [Results so far](#results-so-far) uses the 10 lab measurements only.
 
@@ -122,7 +122,7 @@ docs/notes.md                      method notes: thresholds, noise, batching, re
 
 - No Ax-suggested recipe has been measured yet; the six rows after the initial design hold illustrative values.
 - Each recipe was measured once, so measurement noise is inferred by the model rather than measured. Replicates could be passed to Ax as `(mean, sem)`.
-- The slope model has no predictive power yet (R² = 0.08), so in practice the optimization targets the overpotential.
+- The slope model has no predictive power yet (R² = 0.08).
 - The figures rely on the data tables behind Ax's analyses, which Ax does not guarantee to keep stable between minor versions; `ax-platform` is therefore pinned to 1.3.x.
 - The BayBE comparison treats all parameters as continuous and rounds its recommendations to the lab grid. That is faster than BayBE's hybrid mode with a discrete pH, but not identical to it.
 
