@@ -28,7 +28,7 @@ Because the two compete, there is no single best recipe. The aim is the Pareto f
 | `deposition_time` | 60–600 s | integer |
 | `pH` | 5–10 | steps of 0.5 |
 
-Temperature is held at 25 °C.
+In the thesis, pH was held at about 9 and temperature was one of the varied parameters. Temperature measurements turned out to carry a large systematic error, so here temperature is held at 25 °C and pH is varied instead.
 
 ## How it works
 
